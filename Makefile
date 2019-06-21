@@ -3,7 +3,7 @@ SHELL=/bin/bash
 
 # Identifies the current build.
 # These will be embedded in the app and displayed when it starts.
-VERSION ?= v1.1.0-SNAPSHOT
+VERSION ?= v0.22.0-SNAPSHOT
 COMMIT_HASH ?= $(shell git rev-parse HEAD)
 
 # Indicates which version of the UI console is to be embedded
@@ -193,7 +193,8 @@ swagger-travis: swagger-validate
 	@echo Preparing container image files...
 	@mkdir -p _output/docker
 	@cp -r deploy/docker/* _output/docker
-	@cp ${GOPATH}/bin/kiali _output/docker
+	@mkdir -p ${GOPATH}/bin/kiali
+	@cp -r ${GOPATH}/bin/kiali _output/docker
 
 ## docker-build-kiali: Build Kiali container image into local docker daemon.
 docker-build-kiali: .prepare-docker-image-files
@@ -276,14 +277,18 @@ openshift-reload-image: .ensure-oc-exists
 ## k8s-reload-image: Refreshing image in Kubernetes namespace.
 k8s-reload-image: openshift-reload-image
 
-## lint-install: Installs golangci-lint
-lint-install:
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $$(go env GOPATH)/bin v1.17.1
+## gometalinter-install: Installs gometalinter
+gometalinter-install:
+	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install
+	curl -L https://github.com/dominikh/go-tools/releases/download/2019.1.1/staticcheck_linux_amd64 -o $$GOPATH/bin/staticcheck
+	chmod +x $$GOPATH/bin/staticcheck
 
-## lint: Runs golangci-lint
+## lint: Runs gometalinter
 # doc.go is ommited for linting, because it generates lots of warnings.
 lint:
-	golangci-lint run --skip-files "doc\.go" --tests -D errcheck
+	gometalinter --disable-all --enable=vet --enable=staticcheck --tests --deadline=500s --vendor $$(glide nv | grep -v '^\.$$')
+	gometalinter --disable-all --enable=vet --enable=staticcheck --tests --deadline=500s --vendor kiali.go
 
 ## lint-all: Runs gometalinter with items from good to have list but does not run during travis
 lint-all:

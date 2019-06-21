@@ -1,6 +1,6 @@
 # Details about the Kiali operator image.
 OPERATOR_IMAGE_NAME ?= quay.io/kiali/kiali-operator
-OPERATOR_IMAGE_VERSION ?= dev
+OPERATOR_IMAGE_VERSION ?= latest
 OPERATOR_NAMESPACE ?= kiali-operator
 OPERATOR_WATCH_NAMESPACE ?= kiali-operator
 
@@ -29,7 +29,7 @@ help: Makefile
 	@echo
 
 .download-operator-sdk-if-needed:
-	@if [ "$(shell which operator-sdk 2>/dev/null || echo -n "")" == "" ]; then \
+	@if [ "$(shell which operator-sdk 2>/dev/null || echo -n "")" = "" ]; then \
 	  mkdir -p ../_output/operator-sdk-install ;\
 	  if [ -x "../_output/operator-sdk-install/operator-sdk" ]; then \
 	    echo "You do not have operator-sdk installed in your PATH. Will use the one found here: ../_output/operator-sdk-install/operator-sdk" ;\
